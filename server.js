@@ -2,6 +2,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { suggestAssignments, nextCandidate } = require('./scheduler');
 
 const HOST = process.env.HOST || '127.0.0.1';
 const PORT = Number(process.env.PORT || 4173);
@@ -26,20 +27,19 @@ function userRecord({ id, username, password, name, phone, departmentId, skills 
 }
 
 function seedSchedule(events, users) {
-  const counts = Object.fromEntries(users.map(user => [user.id, 0]));
-  const roleCounts = Object.fromEntries(users.map(user => [user.id, Object.fromEntries(ROLES.map(role => [role, 0]))]));
-  for (const event of [...events].sort((a, b) => a.date.localeCompare(b.date))) {
-    event.assignments = {};
-    for (const role of ROLES) {
-      const candidates = users.filter(person => person.departmentId === event.departmentId && person.skills.includes(role) && !events.some(other => other.date === event.date && other.departmentId === event.departmentId && Object.values(other.assignments || {}).includes(person.id)));
-      candidates.sort((a, b) => counts[a.id] - counts[b.id] || roleCounts[a.id][role] - roleCounts[b.id][role] || a.name.localeCompare(b.name, 'pt-BR'));
-      const selected = candidates[0];
-      if (!selected) continue;
-      event.assignments[role] = selected.id;
-      counts[selected.id]++;
-      roleCounts[selected.id][role]++;
-    }
-  }
+  const suggested = suggestAssignments({ events, people: users });
+  for (const event of suggested) events.find(item => item.id === event.id).assignments = event.assignments;
+}
+
+function demoMemberSpecs() {
+  return [
+    { id: 'u-carol', username: 'carol', password: 'carol123', name: 'Carolina Mendes', phone: '11990000010', departmentId: 'multimedia', skills: ['photo'] },
+    { id: 'u-fernanda', username: 'fernanda', password: 'fernanda123', name: 'Fernanda Alves', phone: '11990000011', departmentId: 'multimedia', skills: ['photo'] },
+    { id: 'u-eduardo', username: 'eduardo', password: 'eduardo123', name: 'Eduardo Lima', phone: '11990000012', departmentId: 'multimedia', skills: ['live'] },
+    { id: 'u-felipe', username: 'felipe', password: 'felipe123', name: 'Felipe Santos', phone: '11990000013', departmentId: 'multimedia', skills: ['live'] },
+    { id: 'u-gabriel', username: 'gabriel', password: 'gabriel123', name: 'Gabriel Oliveira', phone: '11990000014', departmentId: 'multimedia', skills: ['projector'] },
+    { id: 'u-igor', username: 'igor', password: 'igor123', name: 'Igor Almeida', phone: '11990000015', departmentId: 'multimedia', skills: ['projector'] },
+  ];
 }
 
 function seedDatabase() {
@@ -58,6 +58,7 @@ function seedDatabase() {
     userRecord({ id: 'u-davi', username: 'davi', password: 'davi123', name: 'Davi Martins', phone: '11990000007', departmentId: 'multimedia', skills: ['live', 'projector'] }),
     userRecord({ id: 'u-demo', username: 'user', password: 'user', name: 'Usuário Demonstração', phone: '11990000009', departmentId: 'multimedia', skills: ['live', 'projector'] }),
     userRecord({ id: 'u-louvor', username: 'louvor', password: 'louvor123', name: 'Lucas Ferreira', phone: '11990000008', departmentId: 'louvor', skills: ['live'] }),
+    ...demoMemberSpecs().map(person => userRecord(person)),
   );
   const events = (demoMode ? [
     ['e-ceia', 'Ceia', '2026-12-05'],
@@ -80,9 +81,16 @@ function migrateDatabase(database) {
   database.events ||= [];
   database.availability ||= [];
   database.scales ||= {};
-  if (!database.users.some(user => user.username === 'user')) {
-    database.users.push(userRecord({ id: 'u-demo', username: 'user', password: 'user', name: 'Usuário Demonstração', phone: '11990000009', departmentId: 'multimedia', skills: ['live', 'projector'] }));
-    changed = true;
+  const demoMode = !process.env.VERCEL || process.env.SEED_DEMO_ACCOUNTS === 'true';
+  if (demoMode) {
+    const demoUsers = [
+      { id: 'u-demo', username: 'user', password: 'user', name: 'Usuário Demonstração', phone: '11990000009', departmentId: 'multimedia', skills: ['live', 'projector'] },
+      ...demoMemberSpecs(),
+    ];
+    for (const person of demoUsers) if (!database.users.some(user => user.username === person.username)) {
+      database.users.push(userRecord(person));
+      changed = true;
+    }
   }
   if ((database.demoVersion || 0) < 3) {
     seedSchedule(database.events, database.users);
@@ -93,6 +101,10 @@ function migrateDatabase(database) {
     scale.publishedAt ||= now;
     scale.updatedAt = now;
     database.demoVersion = 3;
+    changed = true;
+  }
+  if ((database.demoVersion || 0) < 4) {
+    database.demoVersion = 4;
     changed = true;
   }
   return changed;
@@ -403,17 +415,26 @@ async function handleApi(req, res, url) {
     const role = String(body.role || '');
     const personId = String(body.personId || '');
     if (!ROLES.includes(role)) return fail(res, 400, 'Função inválida.');
+    const previousPersonId = event.assignments?.[role] || '';
+    let replacement = '';
     if (personId) {
       const person = db.users.find(entry => entry.id === personId);
       if (!person || person.departmentId !== event.departmentId || !person.skills.includes(role)) return fail(res, 400, 'Essa pessoa não está habilitada para essa função neste departamento.');
       if (assignedElsewhere(person.id, event, role)) return fail(res, 409, 'Essa pessoa já está em outra função na mesma data.');
       if (unavailable(person.id, event.date)) return fail(res, 409, 'Essa pessoa avisou que não pode servir nessa data.');
-    }
+      replacement = personId;
+    } else replacement = nextCandidate({ event, role, people: db.users.filter(person => person.departmentId === event.departmentId), events: db.events, availability: db.availability, excludeUserId: previousPersonId });
     event.assignments = event.assignments || {};
-    event.assignments[role] = personId;
+    event.assignments[role] = replacement;
+    const month = eventMonth(event);
+    const deptPeople = db.users.filter(person => person.departmentId === event.departmentId);
+    const reservedEvents = db.events.filter(item => item.departmentId === event.departmentId && eventMonth(item) === month && item.date <= event.date);
+    const futureEvents = db.events.filter(item => item.departmentId === event.departmentId && eventMonth(item) === month && item.date > event.date);
+    const rebalance = suggestAssignments({ events: futureEvents, people: deptPeople, availability: db.availability, reservedEvents });
+    for (const suggested of rebalance) db.events.find(item => item.id === suggested.id).assignments = suggested.assignments;
     markDraft(event.departmentId, eventMonth(event));
     await persist();
-    return sendJson(res, 200, event);
+    return sendJson(res, 200, { event, previousPersonId, replacement, rebalancedEvents: futureEvents.length });
   }
 
   const suggestRoute = route.match(/^\/api\/scales\/(\d{4}-\d{2})\/([a-zA-Z0-9-]+)\/suggest$/);
@@ -423,22 +444,15 @@ async function handleApi(req, res, url) {
     if (!monthIsValid(month) || !db.departments.some(dept => dept.id === departmentId)) return fail(res, 400, 'Mês ou departamento inválido.');
     const events = db.events.filter(event => event.departmentId === departmentId && eventMonth(event) === month).sort((a, b) => a.date.localeCompare(b.date) || a.name.localeCompare(b.name));
     if (!events.length) return fail(res, 400, 'Cadastre os eventos desse mês antes de sugerir a escala.');
-    for (const event of events) event.assignments = {};
     const people = db.users.filter(person => person.departmentId === departmentId);
-    const counts = Object.fromEntries(people.map(person => [person.id, 0]));
-    const roleCounts = Object.fromEntries(people.map(person => [person.id, Object.fromEntries(ROLES.map(role => [role, 0]))]));
+    const reservedEvents = db.events.filter(event => event.departmentId === departmentId && eventMonth(event) !== month);
+    const suggestions = suggestAssignments({ events, people, availability: db.availability, reservedEvents });
     let assigned = 0;
-    let open = 0;
-    for (const event of events) for (const role of ROLES) {
-      const candidates = people.filter(person => person.skills.includes(role) && !unavailable(person.id, event.date) && !assignedElsewhere(person.id, event, role));
-      candidates.sort((a, b) => counts[a.id] - counts[b.id] || roleCounts[a.id][role] - roleCounts[b.id][role] || a.name.localeCompare(b.name, 'pt-BR'));
-      const person = candidates[0];
-      if (!person) { open++; continue; }
-      event.assignments[role] = person.id;
-      counts[person.id]++;
-      roleCounts[person.id][role]++;
-      assigned++;
+    for (const suggested of suggestions) {
+      db.events.find(event => event.id === suggested.id).assignments = suggested.assignments;
+      assigned += ROLES.filter(role => suggested.assignments[role]).length;
     }
+    const open = suggestions.reduce((total, event) => total + ROLES.filter(role => !event.assignments[role]).length, 0);
     const scale = getScale(departmentId, month);
     scale.status = 'draft';
     scale.publishedAt = null;

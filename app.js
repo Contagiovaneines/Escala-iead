@@ -1,6 +1,25 @@
 const ROLE_LABELS = { photo: 'Fotos', live: 'Live', projector: 'Projetor' };
 const ROLE_ORDER = ['photo', 'live', 'projector'];
-const appState = { data: null, view: 'schedule', month: '2026-12', departmentId: 'multimedia', editingEventId: null, toastTimer: null, calendarMode: 'calendar', pendingConflict: null, conflictTimer: null, conflictTarget: null };
+const appState = { data: null, view: 'schedule', month: '2026-12', departmentId: 'multimedia', editingEventId: null, toastTimer: null, calendarMode: 'calendar', calendarDate: null, pendingConflict: null, conflictTimer: null, conflictTarget: null };
+const SERVICE_VERSES = [
+  { text: 'Sirvam uns aos outros, cada um conforme o dom que recebeu.', reference: '1 Pedro 4:10' },
+  { text: 'Tudo o que fizerem, façam de todo o coração.', reference: 'Colossenses 3:23' },
+  { text: 'Sirvam ao Senhor com alegria.', reference: 'Salmos 100:2' },
+  { text: 'Sejam sempre abundantes na obra do Senhor.', reference: '1 Coríntios 15:58' },
+];
+
+function updateServiceVerse() {
+  const quote = document.getElementById('service-verse');
+  const reference = document.getElementById('verse-reference');
+  if (!quote || !reference) return;
+  const verse = SERVICE_VERSES[Math.floor(Date.now() / 3600000) % SERVICE_VERSES.length];
+  quote.textContent = `“${verse.text}”`;
+  reference.textContent = verse.reference;
+}
+
+function scheduleVerseUpdate() {
+  setTimeout(() => { updateServiceVerse(); scheduleVerseUpdate(); }, 3600000 - (Date.now() % 3600000) + 50);
+}
 
 function esc(value = '') { return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
 function initials(name = '') { return name.trim().split(/\s+/).slice(0, 2).map(word => word[0]?.toUpperCase() || '').join(''); }
@@ -331,6 +350,7 @@ function renderSchedule() {
     return `<tr><td class="event-date"><div class="date-day">${String(date.getDate()).padStart(2, '0')}</div><div class="date-month">${new Intl.DateTimeFormat('pt-BR', { weekday: 'short', month: 'short' }).format(date).replace('.', '')} · ${esc(event.time)}</div></td><td class="event-name">${esc(event.name)}<span class="event-weekday">${esc(departmentName(event.departmentId))}</span></td>${eventAssignments}<td>${manager ? `<button class="row-menu" data-edit-event="${esc(event.id)}" title="Editar evento">⋯</button>` : ''}</td></tr>`;
   }).join('');
   renderCalendar(events);
+  if (appState.calendarDate && document.getElementById('calendar-day-dialog').open) renderCalendarDayDetails();
   document.querySelectorAll('[data-assignment]').forEach(select => select.addEventListener('change', () => saveAssignment(select)));
   tbody.querySelectorAll('[data-edit-event]').forEach(button => button.addEventListener('click', () => openEventDialog(appState.data.events.find(event => event.id === button.dataset.editEvent))));
 }
@@ -339,7 +359,8 @@ function renderAssignment(event, role) {
   const selectedId = event.assignments?.[role] || '';
   if (!isManager()) return `<span class="assignment-person ${selectedId ? '' : 'unassigned'}">${esc(lookupPerson(selectedId)?.name || (selectedId ? 'Conta removida' : 'A definir'))}</span>`;
   const candidates = usersForDepartment().filter(person => person.skills.includes(role));
-  const options = [`<option value="">${candidates.length ? 'Selecionar pessoa' : 'Sem inscrito'}</option>`, ...candidates.map(person => {
+  const emptyLabel = selectedId ? 'Remover e sugerir próxima pessoa' : candidates.length ? 'Sugerir próxima pessoa' : 'Sem inscrito';
+  const options = [`<option value="">${candidates.length ? emptyLabel : 'Sem inscrito'}</option>`, ...candidates.map(person => {
     const conflict = isAssignedOnDate(person.id, event.date, event.departmentId, event.id, role);
     const disabled = conflict && person.id !== selectedId;
     return `<option value="${esc(person.id)}" ${person.id === selectedId ? 'selected' : ''} ${disabled ? 'disabled' : ''}>${esc(person.name)}${disabled ? ' · já escalado' : ''}</option>`;
@@ -375,21 +396,47 @@ function renderCalendar(events) {
       const assigned = event.assignments?.[role] ? lookupPerson(event.assignments[role])?.name || 'Conta removida' : 'A definir';
       return `<div class="calendar-role ${highlighted ? 'conflict-target' : ''}" data-conflict-slot="${esc(event.id)}|${role}"><span class="calendar-role-name"><i class="role-dot ${role}-dot"></i>${fullRoleName(role)}</span><strong class="calendar-assignee ${event.assignments?.[role] ? '' : 'unassigned'}">${esc(assigned)}</strong></div>`;
     }).join('')}</div></article>`).join('');
-    cells.push(`<div class="calendar-day ${inMonth ? '' : 'outside-month'} ${iso === today ? 'is-today' : ''}" data-date="${iso}"><div class="calendar-day-head"><span class="calendar-day-number">${date.getDate()}</span>${iso === today ? '<small>Hoje</small>' : ''}</div>${items}</div>`);
+    const accessibleDate = formatDate(iso, { weekday: 'long', day: 'numeric', month: 'long' });
+    cells.push(`<div class="calendar-day ${inMonth ? '' : 'outside-month'} ${iso === today ? 'is-today' : ''}" data-date="${iso}"><div class="calendar-day-head"><button class="calendar-day-number" type="button" data-calendar-date="${iso}" aria-label="Abrir ${accessibleDate}${dayEvents.length ? `, ${dayEvents.length} evento${dayEvents.length === 1 ? '' : 's'}` : ''}">${date.getDate()}</button>${dayEvents.length ? `<small class="calendar-day-count">${dayEvents.length} evento${dayEvents.length === 1 ? '' : 's'}</small>` : ''}${iso === today ? '<small>Hoje</small>' : ''}</div>${items}</div>`);
   }
   document.getElementById('calendar-grid').innerHTML = cells.join('');
   document.getElementById('calendar-empty').hidden = events.length > 0;
+  document.querySelectorAll('[data-calendar-date]').forEach(button => button.addEventListener('click', () => openCalendarDay(button.dataset.calendarDate)));
+}
+
+function openCalendarDay(date) {
+  appState.calendarDate = date;
+  renderCalendarDayDetails();
+  const dialog = document.getElementById('calendar-day-dialog');
+  if (!dialog.open) dialog.showModal();
+}
+
+function renderCalendarDayDetails() {
+  if (!appState.calendarDate || !appState.data) return;
+  const events = appState.data.events.filter(event => event.departmentId === appState.departmentId && event.date === appState.calendarDate).sort((a, b) => a.time.localeCompare(b.time) || a.name.localeCompare(b.name, 'pt-BR'));
+  document.getElementById('calendar-day-title').textContent = formatDate(appState.calendarDate, { weekday: 'long', day: 'numeric', month: 'long' });
+  const content = document.getElementById('calendar-day-details');
+  content.innerHTML = events.length ? events.map(event => `<article class="calendar-detail-event"><div class="calendar-detail-heading"><h3>${esc(event.name)}</h3><time>${esc(event.time)}</time></div><div class="calendar-detail-roles">${ROLE_ORDER.map(role => `<div class="calendar-detail-role"><span><i class="role-dot ${role}-dot"></i>${fullRoleName(role)}</span>${renderAssignment(event, role)}</div>`).join('')}</div></article>`).join('') : '<div class="calendar-day-empty">Nenhum evento cadastrado nesta data.</div>';
+  content.querySelectorAll('[data-assignment]').forEach(select => select.addEventListener('change', () => saveAssignment(select)));
+}
+
+function closeCalendarDay() {
+  document.getElementById('calendar-day-dialog').close();
+  appState.calendarDate = null;
 }
 
 async function saveAssignment(select) {
   const [eventId, role] = select.dataset.assignment.split('|');
   const personId = select.value;
+  const previousPersonId = appState.data.events.find(event => event.id === eventId)?.assignments?.[role] || '';
   const hadConflict = Boolean(appState.pendingConflict);
   try {
-    await api(`/api/events/${eventId}/assignment`, { method: 'PUT', body: { role, personId } });
+    const result = await api(`/api/events/${eventId}/assignment`, { method: 'PUT', body: { role, personId } });
     await loadApp();
     if (hadConflict && !appState.pendingConflict) toast('Conflito resolvido. O alerta foi desativado.');
-    else toast('Escala atualizada como rascunho.');
+    else if (!personId && result.replacement) toast(`${lookupPerson(previousPersonId)?.name || 'A pessoa'} saiu; ${lookupPerson(result.replacement)?.name || 'a próxima pessoa'} assumiu.${result.rebalancedEvents ? ` ${result.rebalancedEvents} data${result.rebalancedEvents === 1 ? '' : 's'} seguinte${result.rebalancedEvents === 1 ? '' : 's'} redistribuída${result.rebalancedEvents === 1 ? '' : 's'}.` : ''}`);
+    else if (!personId) toast(result.rebalancedEvents ? `Sem outra pessoa disponível para essa vaga. ${result.rebalancedEvents} data${result.rebalancedEvents === 1 ? '' : 's'} seguinte${result.rebalancedEvents === 1 ? '' : 's'} redistribuída${result.rebalancedEvents === 1 ? '' : 's'}.` : 'Sem outra pessoa disponível para essa vaga.');
+    else toast(`Escala atualizada.${result.rebalancedEvents ? ` ${result.rebalancedEvents} datas seguintes redistribuídas.` : ' Não há datas seguintes neste mês.'}`);
   } catch (error) {
     if (error.status === 409) {
       const event = appState.data.events.find(item => item.id === eventId);
@@ -615,6 +662,8 @@ document.querySelectorAll('[data-open-view]').forEach(button => button.addEventL
 document.getElementById('logout-button').addEventListener('click', async () => { clearTimeout(appState.conflictTimer); appState.conflictTimer = null; appState.pendingConflict = null; try { await api('/api/logout', { method: 'POST' }); } catch {} appState.data = null; showAuth('login'); });
 document.getElementById('mobile-menu').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('open'));
 document.getElementById('help-button').addEventListener('click', () => document.getElementById('help-dialog').showModal());
+document.getElementById('calendar-day-close').addEventListener('click', closeCalendarDay);
+document.getElementById('calendar-day-dialog').addEventListener('close', () => { appState.calendarDate = null; });
 document.getElementById('calendar-toggle').addEventListener('click', () => { appState.calendarMode = 'calendar'; renderSchedule(); });
 document.getElementById('list-toggle').addEventListener('click', () => { appState.calendarMode = 'list'; renderSchedule(); });
 document.getElementById('test-conflict-button').addEventListener('click', testConflict);
@@ -676,6 +725,9 @@ document.querySelectorAll('input[name="skills"]').forEach(input => input.addEven
   if (input.value === 'photo' && input.checked) technical.forEach(option => { option.checked = false; });
   if ((input.value === 'live' || input.value === 'projector') && input.checked) photo.checked = false;
 }));
+
+updateServiceVerse();
+scheduleVerseUpdate();
 
 loadApp().catch(error => {
   if (error.status === 401) showAuth('login');
