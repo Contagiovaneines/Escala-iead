@@ -8,5 +8,9 @@
     { "src": "index.html", "use": "@vercel/static" },
     { "src": "styles.css", "use": "@vercel/static" },
     { "src": "app.js", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/[...route].js" },
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
