@@ -3,7 +3,7 @@
 Aplicativo responsivo para organizar as escalas do departamento de Multimídia. A equipe pode consultar o calendário no celular ou computador; líderes e administradores montam, revisam e publicam a escala do mês.
 
 ## Rodar localmente
- 
+  
 Requer Node.js 20.18 ou mais recente.
 
 1. No Windows, abra `iniciar-app.bat`; ou execute `npm install` e `npm start` nesta pasta.
