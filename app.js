@@ -657,9 +657,11 @@ document.getElementById('open-signup').addEventListener('click', () => showAuth(
 document.getElementById('open-login').addEventListener('click', () => showAuth('login'));
 document.getElementById('fill-demo').addEventListener('click', () => { document.getElementById('login-username').value = 'admin'; document.getElementById('login-password').value = 'admin'; });
 document.getElementById('fill-member-demo').addEventListener('click', () => { document.getElementById('login-username').value = 'user'; document.getElementById('login-password').value = 'user'; });
-document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
+document.querySelectorAll('.nav-item[data-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
 document.querySelectorAll('[data-open-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.openView)));
-document.getElementById('logout-button').addEventListener('click', async () => { clearTimeout(appState.conflictTimer); appState.conflictTimer = null; appState.pendingConflict = null; try { await api('/api/logout', { method: 'POST' }); } catch {} appState.data = null; showAuth('login'); });
+async function logout() { clearTimeout(appState.conflictTimer); appState.conflictTimer = null; appState.pendingConflict = null; try { await api('/api/logout', { method: 'POST' }); } catch {} appState.data = null; showAuth('login'); }
+document.getElementById('logout-button').addEventListener('click', logout);
+document.getElementById('mobile-logout-button').addEventListener('click', logout);
 document.getElementById('mobile-menu').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('open'));
 document.getElementById('help-button').addEventListener('click', () => document.getElementById('help-dialog').showModal());
 document.getElementById('calendar-day-close').addEventListener('click', closeCalendarDay);
