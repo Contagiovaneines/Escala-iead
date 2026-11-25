@@ -1,0 +1,21 @@
+{
+  "name": "escala-iead",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Escala mensal por departamento para a equipe IEAD",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Contagiovaneines/Escala-iead.git"
+  },
+  "engines": {
+    "node": ">=20.18.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "check": "node --check server.js && node --check app.js && node --check api/[...route].js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "1.2.1"
+  }
+}

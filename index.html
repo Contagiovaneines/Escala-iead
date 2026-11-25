@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#14233f" />
+    <title>Escala — equipe de transmissão</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <section class="auth-screen" id="auth-screen">
+      <div class="auth-brand"><span class="brand-mark"><span></span><span></span><span></span></span><span>escala<span class="brand-dot">.</span></span></div>
+      <div class="auth-layout">
+        <aside class="auth-story">
+          <span class="auth-kicker">EQUIPE MULTIMÍDIA</span>
+          <h1>Todo mundo sabe onde servir.</h1>
+          <p>Uma escala organizada, funções bem distribuídas e avisos no tempo certo.</p>
+          <div class="auth-roles"><span><i class="role-dot photo-dot"></i>Fotos</span><span><i class="role-dot live-dot"></i>Live</span><span><i class="role-dot projector-dot"></i>Projetor</span></div>
+          <div class="auth-graphic"><div class="graphic-date"><small>DEZ</small><strong>20</strong><span>DOMINGO</span></div><div class="graphic-lines"><i></i><i></i><i></i><i></i></div><div class="graphic-check">✓</div></div>
+        </aside>
+
+        <main class="auth-card">
+          <section id="login-panel">
+            <p class="eyebrow">BEM-VINDO DE VOLTA</p>
+            <h2>Entrar na escala</h2>
+            <p class="auth-intro">Use seu login para ver os compromissos da sua equipe.</p>
+            <form id="login-form" class="form-stack">
+              <label for="login-username">Login</label><input id="login-username" name="username" autocomplete="username" placeholder="Seu login" required />
+              <label for="login-password">Senha</label><input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Sua senha" required />
+              <button class="button button-primary auth-submit" type="submit">Entrar</button>
+            </form>
+            <p class="auth-switch">Ainda não tem conta? <button type="button" id="open-signup">Fazer inscrição</button></p>
+            <div class="demo-login"><span class="demo-dot"></span><div><strong>Ver como administrador (local)</strong><small>Login <b>admin</b> · senha <b>admin</b></small></div><button type="button" id="fill-demo" title="Preencher acesso de administrador">Usar</button></div>
+            <div class="demo-login member-demo"><span class="demo-dot"></span><div><strong>Ver como membro</strong><small>Login <b>user</b> · senha <b>user</b></small></div><button type="button" id="fill-member-demo" title="Preencher acesso de membro">Usar</button></div>
+          </section>
+
+          <section id="signup-panel" hidden>
+            <p class="eyebrow">INSCRIÇÃO DA EQUIPE</p>
+            <h2>Criar minha conta</h2>
+            <p class="auth-intro">Toda conta nova começa como membro. O TI gerencia os níveis de acesso.</p>
+            <form id="signup-form" class="form-stack signup-form">
+              <label for="signup-name">Nome completo</label><input id="signup-name" name="name" autocomplete="name" placeholder="Seu nome" required maxlength="80" />
+              <div class="form-pair"><div><label for="signup-phone">Telefone com DDD</label><input id="signup-phone" name="phone" type="tel" autocomplete="tel" placeholder="(11) 90000-0000" required /></div><div><label for="signup-department">Departamento</label><select id="signup-department" name="departmentId" required></select></div></div>
+              <label for="signup-username">Crie um login</label><input id="signup-username" name="username" autocomplete="username" placeholder="Ex.: joao.silva" required minlength="3" maxlength="24" />
+              <label for="signup-password">Crie uma senha</label><input id="signup-password" name="password" type="password" autocomplete="new-password" placeholder="Pelo menos 6 caracteres" required minlength="6" />
+              <fieldset class="skills-field"><legend>O que você faz? <span>Escolha uma ou mais funções</span></legend><div class="skill-options"><label class="skill-option photo-option"><input type="checkbox" name="skills" value="photo" /><span><i class="role-dot photo-dot"></i>Fotos</span></label><label class="skill-option"><input type="checkbox" name="skills" value="live" /><span><i class="role-dot live-dot"></i>Live</span></label><label class="skill-option"><input type="checkbox" name="skills" value="projector" /><span><i class="role-dot projector-dot"></i>Projetor</span></label></div><small class="skill-help">Fotos é uma equipe separada; Live e Projetor podem ser combinados.</small></fieldset>
+              <button class="button button-primary auth-submit" type="submit">Enviar inscrição</button>
+            </form>
+            <p class="auth-switch">Já tem conta? <button type="button" id="open-login">Voltar ao login</button></p>
+          </section>
+        </main>
+      </div>
+      <footer class="auth-footer">Acesso protegido para cada departamento <span>•</span> Multimídia</footer>
+    </section>
+
+    <div class="app-shell" id="app-shell" hidden>
+      <aside class="sidebar" id="sidebar">
+        <a class="brand" href="#escala" aria-label="Escala, início"><span class="brand-mark"><span></span><span></span><span></span></span><span>escala<span class="brand-dot">.</span></span></a>
+        <div class="workspace-label">DEPARTAMENTO</div>
+        <div class="workspace-name"><span class="workspace-icon">✦</span><span id="workspace-name">Multimídia</span><span class="chevron">⌄</span></div>
+        <div class="nav-label">MENU</div>
+        <nav class="main-nav" aria-label="Navegação principal">
+          <button class="nav-item active" data-view="schedule"><span class="nav-icon">▦</span>Escala</button>
+          <button class="nav-item manager-only" data-view="team"><span class="nav-icon">♧</span>Equipe</button>
+          <button class="nav-item manager-only" data-view="events"><span class="nav-icon">▣</span>Eventos</button>
+          <button class="nav-item" data-view="availability"><span class="nav-icon">◷</span>Indisponibilidades<span class="nav-count" id="open-count">0</span></button>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="reminder-note"><span class="reminder-spark">✳</span><div><strong>Lembretes semanais</strong><small>Segunda e sexta</small></div><span class="toggle on"><i></i></span></div>
+          <div class="profile-row"><div class="avatar admin-avatar" id="user-avatar">A</div><div class="profile-copy"><strong id="profile-name">Nome</strong><small id="profile-role">Membro</small></div><button class="profile-menu" id="logout-button" title="Sair da conta" aria-label="Sair da conta">↗</button></div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar"><div class="breadcrumbs"><span id="breadcrumb-department">Multimídia</span><b>/</b><strong id="breadcrumb-current">Escala</strong></div><div class="topbar-actions"><span class="saved-state"><i></i><span id="connection-label">Conectado</span></span><button class="icon-button" id="help-button" aria-label="Ajuda" title="Ajuda">?</button><button class="mobile-menu" id="mobile-menu" aria-label="Abrir menu">☰</button></div></header>
+
+        <section class="view-panel active" id="view-schedule">
+          <div class="page-heading"><div><p class="eyebrow" id="schedule-eyebrow">SUA EQUIPE, EM SINTONIA</p><h1 id="schedule-title">Escala da equipe</h1><p class="page-subtitle" id="schedule-subtitle">Os eventos e as funções do departamento.</p></div><div class="heading-actions manager-controls"><button class="button button-secondary" id="add-event-shortcut">＋ Novo evento</button><button class="button button-secondary conflict-test-button" id="test-conflict-button">Testar conflito</button><button class="button button-primary" id="suggest-button">✳ Sugerir escala</button><button class="button button-publish" id="publish-button">Publicar mês</button></div></div>
+          <div class="schedule-toolbar"><div class="month-picker"><button class="month-arrow" id="prev-month" aria-label="Mês anterior">‹</button><input id="month-select" type="month" aria-label="Mês da escala" /><button class="month-arrow" id="next-month" aria-label="Próximo mês">›</button></div><label class="department-picker manager-only">Departamento<select id="department-select"></select></label><div class="scale-status" id="scale-status"><span class="status-pill">RASCUNHO</span></div></div>
+          <div class="responsible-bar manager-controls"><span>Responsável por esta escala</span><select id="responsible-select" aria-label="Responsável pela escala"></select><small>Administradores e líderes podem editar todas as escalas.</small></div>
+          <div class="stat-strip" id="stats-strip"><div class="stat-item"><span class="stat-symbol blue">▦</span><div><strong id="stat-events">0</strong><small>eventos no mês</small></div></div><div class="stat-item"><span class="stat-symbol mint">♧</span><div><strong id="stat-people">0</strong><small>pessoas na equipe</small></div></div><div class="stat-item"><span class="stat-symbol amber">◷</span><div><strong id="stat-open">0</strong><small>funções em aberto</small></div></div><div class="stat-note"><span>✦</span><span id="balance-note">A distribuição busca equilibrar as escalas.</span></div></div>
+          <div class="content-grid"><section class="schedule-section"><div class="section-heading"><div><h2 id="list-heading">Eventos do mês</h2><p id="list-caption">Uma pessoa por função e sem repetição na mesma data.</p></div><div class="section-tools"><div class="view-toggle" role="group" aria-label="Visualização da escala"><button id="calendar-toggle" class="active" type="button">Calendário</button><button id="list-toggle" type="button">Lista</button></div><button class="text-button" id="enable-notifications">Ativar alertas</button></div></div><div class="calendar-wrap" id="calendar-view"><div class="calendar-weekdays"><span>Segunda</span><span>Terça</span><span>Quarta</span><span>Quinta</span><span>Sexta</span><span>Sábado</span><span>Domingo</span></div><div class="calendar-grid" id="calendar-grid"></div><div class="calendar-empty" id="calendar-empty" hidden>Nenhum evento cadastrado neste mês.</div></div><div class="schedule-table-wrap" id="schedule-list-view" hidden><table class="schedule-table"><thead><tr><th>DATA E HORA</th><th>EVENTO</th><th><i class="role-dot photo-dot"></i>FOTOS</th><th><i class="role-dot live-dot"></i>LIVE</th><th><i class="role-dot projector-dot"></i>PROJETOR</th><th></th></tr></thead><tbody id="schedule-rows"></tbody></table><div class="empty-state" id="schedule-empty"><div class="empty-illustration"><span>▦</span><i>✳</i></div><h3>Nenhum evento neste mês</h3><p>Escolha outro mês ou cadastre os eventos da equipe.</p><button class="button button-primary manager-controls" id="empty-add-event">＋ Cadastrar evento</button></div></div><div class="table-legend"><span><i class="legend-dot assigned"></i>Escalado</span><span><i class="legend-dot vacant"></i>Precisa de alguém</span><span class="legend-rule">Horário do evento pode ser alterado.</span></div></section>
+            <aside class="right-rail"><section class="rail-card reminders-card"><div class="rail-title"><div><span class="rail-icon reminder-icon">◷</span><h2>Lembretes da equipe</h2></div></div><p class="rail-description">Segunda para o próximo domingo; sexta para o fim de semana.</p><div id="reminder-list" class="reminder-list"></div><div class="reminder-footnote"><span>i</span>O navegador avisa enquanto o app estiver aberto.</div></section><section class="rail-card availability-card"><div class="rail-title"><div><span class="rail-icon alert-icon">!</span><h2>Indisponibilidade</h2></div><button class="text-button" data-open-view="availability">Ver avisos</button></div><p class="rail-description">Pedidos para o administrador ou líder ajustar.</p><div id="availability-preview" class="availability-preview"></div></section><section class="rule-card"><div class="rule-mark">✓</div><div><strong>Conflitos sob controle</strong><p>A mesma pessoa não aparece em duas funções na mesma data.</p></div></section></aside>
+          </div>
+        </section>
+
+        <section class="view-panel" id="view-team"><div class="page-heading"><div><p class="eyebrow">PESSOAS E ACESSOS</p><h1>Equipe</h1><p class="page-subtitle">Inscrições, funções e níveis de acesso por departamento.</p></div><div class="heading-actions"><span class="ti-only label-note">Só TI pode mudar os níveis de acesso.</span></div></div><div class="team-groups" id="team-groups"></div><div class="empty-state team-empty" id="team-empty"><div class="empty-illustration"><span>♧</span><i>＋</i></div><h3>Ninguém inscrito ainda</h3><p>As novas inscrições aparecerão aqui como membros.</p></div></section>
+
+        <section class="view-panel" id="view-events"><div class="page-heading"><div><p class="eyebrow">AGENDA DO DEPARTAMENTO</p><h1>Eventos</h1><p class="page-subtitle">Cultos e outros compromissos, com horário editável.</p></div><div class="heading-actions"><button class="button button-secondary" id="add-sundays-button">＋ Cultos de domingo</button><button class="button button-primary" id="add-event-button">＋ Novo evento</button></div></div><div class="event-list" id="event-list"></div><div class="empty-state event-empty" id="event-empty"><div class="empty-illustration"><span>▣</span><i>＋</i></div><h3>Nenhum evento cadastrado</h3><p>Inclua cada culto ou evento com sua própria data.</p><button class="button button-primary" id="event-add-empty">＋ Cadastrar evento</button></div></section>
+
+        <section class="view-panel" id="view-availability"><div class="page-heading"><div><p class="eyebrow">AJUSTES DA EQUIPE</p><h1>Indisponibilidades</h1><p class="page-subtitle">Avise quando não puder servir; a gestão ajusta a escala.</p></div><button class="button button-secondary" id="report-unavailable">Avisar indisponibilidade</button></div><div class="availability-board" id="availability-board"></div><div class="empty-state availability-empty" id="availability-empty"><div class="empty-illustration"><span>◷</span><i>✓</i></div><h3>Nenhum aviso por enquanto</h3><p>Os pedidos de indisponibilidade aparecerão aqui.</p><button class="button button-secondary" id="availability-add-empty">Avisar indisponibilidade</button></div></section>
+
+        <footer class="app-footer"><span>Feito para a equipe servir com tranquilidade.</span><span class="privacy-note">Acesso por departamento · Multimídia</span></footer>
+      </main>
+    </div>
+
+    <dialog id="event-dialog" class="modal"><form id="event-form"><div class="modal-heading"><div><p class="eyebrow">AGENDA</p><h2 id="event-dialog-title">Novo evento</h2></div><button type="button" class="modal-close" data-close-dialog="event-dialog" aria-label="Fechar">×</button></div><label for="event-name">Nome do evento</label><input id="event-name" required maxlength="80" placeholder="Ex.: Culto de domingo" /><div class="form-pair"><div><label for="event-date">Data</label><input id="event-date" type="date" required /></div><div><label for="event-time">Horário</label><input id="event-time" type="time" value="18:30" required /></div></div><label for="event-department">Departamento</label><select id="event-department" required></select><p class="field-hint">O padrão do culto é 18h30. Você pode mudar o horário de cada evento.</p><div class="modal-actions"><button type="button" class="button button-secondary" data-close-dialog="event-dialog">Cancelar</button><button type="submit" class="button button-primary" id="save-event">Cadastrar evento</button></div></form></dialog>
+
+    <dialog id="unavailable-dialog" class="modal"><form id="unavailable-form"><div class="modal-heading"><div><p class="eyebrow">AVISE A EQUIPE</p><h2>Não posso servir</h2></div><button type="button" class="modal-close" data-close-dialog="unavailable-dialog" aria-label="Fechar">×</button></div><label for="unavailable-person">Pessoa</label><select id="unavailable-person"></select><label for="unavailable-date">Data</label><input id="unavailable-date" type="date" required /><label for="unavailable-note">Observação <span class="optional">opcional</span></label><textarea id="unavailable-note" rows="3" maxlength="180" placeholder="Deixe um recado para o líder ou administrador."></textarea><div class="modal-actions"><button type="button" class="button button-secondary" data-close-dialog="unavailable-dialog">Cancelar</button><button type="submit" class="button button-primary">Enviar aviso</button></div></form></dialog>
+
+    <dialog id="conflict-dialog" class="conflict-modal" aria-labelledby="conflict-title"><div class="conflict-symbol">!</div><p class="eyebrow">ALERTA DE ESCALA</p><h2 id="conflict-title">Conflito de horário</h2><p id="conflict-message" class="conflict-message"></p><div id="conflict-detail" class="conflict-detail"></div><div class="conflict-actions"><button type="button" class="button button-secondary" id="conflict-ok">OK, vou ajustar</button><button type="button" class="button button-primary" id="conflict-go">Ir até a escala</button></div><small class="conflict-repeat">Se continuar sem ajuste, este aviso volta em 1 minuto.</small></dialog>
+
+    <dialog id="help-dialog" class="modal help-modal"><form method="dialog"><div class="modal-heading"><div><p class="eyebrow">COMO FUNCIONA</p><h2>Uma escala por departamento</h2></div><button class="modal-close" value="cancel" aria-label="Fechar">×</button></div><div class="help-copy"><p><strong>Inscrição:</strong> a pessoa informa nome, telefone e uma ou mais funções. Toda conta nova começa como membro.</p><p><strong>Acesso:</strong> membros só veem a escala publicada do próprio departamento. Líderes e administradores podem editar todas as escalas.</p><p><strong>TI:</strong> somente o perfil de TI pode promover alguém a líder ou administrador, ou rebaixar a membro.</p><p><strong>Confirmação:</strong> o administrador ou líder gera uma sugestão equilibrada, revisa e publica a escala do mês.</p><p class="help-note">A demonstração usa dados locais neste computador. Para a equipe acessar de vários aparelhos, publique o servidor em um endereço HTTPS e troque as senhas de demonstração.</p></div><div class="modal-actions"><button class="button button-primary" value="cancel">Entendi</button></div></form></dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
